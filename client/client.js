@@ -5,7 +5,7 @@ const url = `${isSecure ? 'wss' : 'ws'}://${loc.hostname}`;
 let socket,
     connected = false,
     timeout = 625
-    s = 8;
+    s = 4;
 
 const canvas = document.createElement('canvas');
 document.body.append(canvas);
@@ -21,16 +21,18 @@ function newConnection() {
 
         const o = JSON.parse(e.data)
 
-        if (o.type === 'set'){
-            ctx.fillRect(o.x*s, o.y*s, s, s);
+        if (o.type === 'set') {
+            placePixel(o.color, o.x, o.y);
             if (!state[o.x])
                 state[o.x] = [];
-            state[o.x][o.y] = 1;
+            state[o.x][o.y] = o.color;
+            console.log('set', o)
         }
 
-        if (o.type === 'scene'){
+        if (o.type === 'auth') {
             state = o.state;
             restore();
+            console.log('auth', o)
         }
 
     };
@@ -66,15 +68,19 @@ requestAnimationFrame(function upd() {
         state && restore()
     }
 
-
     requestAnimationFrame(upd)
 });
+
+function placePixel(value, x, y) {
+    ctx.fillStyle = `hsl(${value}, 55%, 55%)`;
+    ctx.fillRect(x * s, y * s, s, s);
+}
 
 function restore() {
     state.forEach((row, x) => {
         row && row.forEach((value, y) => {
             if (value) {
-                ctx.fillRect(x*s, y*s, s, s);
+                placePixel(value, x, y);
             }
         });
     });

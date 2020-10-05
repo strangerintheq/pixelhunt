@@ -17,12 +17,14 @@ const state = [];
 const wss = new WebSocketServer.Server({server});
 wss.on('connection', (ws) => {
 
-    const id = Date.now() + '_' + Math.random().toString(36).substring(2)
+    const color = Math.random()*360;
+    const id = Date.now() + '_' + color;
 
     clients[id] = ws;
 
     ws.send(JSON.stringify({
-        type: 'scene',
+        type: 'auth',
+        id,
         state
     }));
 
@@ -30,7 +32,9 @@ wss.on('connection', (ws) => {
         const o = JSON.parse(msg);
         if (!state[o.x])
             state[o.x] = [];
-        state[o.x][o.y] = 1;
+        state[o.x][o.y] = color;
+        o.color = color;
+        msg = JSON.stringify(o);
 
         for (let client in clients)
             clients[client].send(msg);
